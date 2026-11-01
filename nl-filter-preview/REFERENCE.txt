@@ -1,0 +1,158 @@
+GIMP Render Tools 1.1 — installed for GIMP 3.2.6 / Windows x64
+1 November 2026
+
+COMMANDS
+
+Filters > Enhance > NL Filter — Zoom Preview…
+    A separately registered interface to GIMP's installed NL Filter engine.
+    Set Alpha, Radius and Filter, then click Open Render / Zoom Preview.
+    The separate window renders automatically. Use Fit, 100%, the +/-
+    buttons or the zoom percentage (5–800%) to inspect the result. Scroll
+    through an enlarged preview. Show original switches the displayed view.
+    Changes to settings refresh automatically after a 300 ms pause. Rapid
+    changes are combined into one render. Zoom and scroll position are retained.
+    Render Preview remains available for an immediate manual refresh.
+    Close the preview and click OK to apply, or Cancel to discard.
+    Preview renders a duplicate; it does not filter the original layer.
+    The preview display is 8-bit RGBA; applying uses the native NL Filter.
+    This is an additional interface, not a rebuilt copy of the C executable.
+    It requires GIMP's native plug-in-nl-filter to remain installed.
+
+    Alpha and Radius now have sliders plus keyboard-editable numeric fields.
+    The native slider ranges stay at 0–1 and 1/3–1; you may type Alpha up to 4
+    and Radius up to 8, then press Tab or Enter to commit the numeric entry.
+    Native alpha above 1 extrapolates the filter correction at alpha=1.
+    Native radius above 1 is an extension using repeated radius=1 passes;
+    fractional pass counts blend in the last pass. It is not a change to the
+    original native algorithm's geometric radius. Larger values can be strong.
+    Normal native values up to 1 continue to use the native operation directly.
+
+    Six additional filter choices:
+    * Gaussian smoothing
+    * Bilateral edge-preserving smoothing (adjustable edge threshold)
+    * Median / impulse removal
+    * Trimmed mean (20% trimmed from each end of the valid neighbourhood)
+    * Unsharp mask
+    * Local contrast enhancement
+    These use Alpha as a blend/strength control and Radius in pixels. For
+    Gaussian and unsharp, Radius is Gaussian sigma; local contrast uses three
+    times Radius. Median and trimmed mean use ceil(Radius) for the square
+    neighbourhood half-width. Source alpha is preserved. Extra-filter radius
+    sliders extend to 8; their numeric fields also accept up to 8.
+
+Image > Advanced Scale Image…
+Layer > Advanced Scale Layer…
+    Enter the target dimensions and select an algorithm. Keep aspect ratio
+    links edits to the original image/layer ratio in the interactive dialog.
+    Disable it to enter width and height independently.
+    Whole-image scaling resizes raster layers and the canvas together.
+    Layer scaling changes the selected layer's dimensions, keeping its offset.
+    Scaling is recorded as an undo group.
+
+RESAMPLING OPTIONS
+
+Lanczos 3
+    Windowed-sinc resampling. A useful detailed photographic resampler;
+    high-contrast edges can exhibit ringing.
+Staged Box + Lanczos 3
+    Repeated 2x box reductions when both dimensions permit, followed by
+    Lanczos to the target size. Useful for substantial reductions.
+Linear-light Lanczos 3
+    Converts sRGB-encoded pixel values to linear light before resampling,
+    then re-encodes them. Can retain brighter small highlights and give
+    different edge/texture brightness from ordinary encoded-space resizing.
+Hamming
+    A compact filter, useful when a different sharpness/ringing compromise
+    from Lanczos is desired.
+Box / area averaging
+    A simple averaging option for reductions; not a detail-generating method.
+Lanczos — adjustable lobes
+    Separable, antialiased windowed-sinc kernel. Sinc lobes adjusts support
+    from 2 to 8, trading sharpness, ringing and calculation cost.
+Mitchell–Netravali — adjustable B/C
+    Cubic resampling with independently adjustable B and C. Standard Mitchell
+    uses B=C=1/3. B=0,C=0.5 gives Catmull–Rom; B=1,C=0 gives a B-spline.
+Catmull–Rom cubic / Cubic B-spline
+    Convenient fixed choices from the cubic family: sharper interpolating
+    Catmull–Rom and smoother non-interpolating B-spline.
+Kaiser-windowed sinc — adjustable
+    Sinc lobes adjusts support. Kaiser beta changes the window taper:
+    higher values taper more strongly; lower values retain more ringing.
+Gaussian — adjustable sigma
+    A smooth resampling kernel with sigma from 0.2 to 2.0 in kernel sample
+    units, widened appropriately when downsampling with antialiasing enabled.
+Bicubic / Nearest neighbour
+    Additional fixed options, including nearest neighbour for pixel art.
+
+Additional controls:
+    * Antialias custom kernels widens support when reducing. Applies to
+      adjustable Lanczos, Mitchell, Catmull–Rom, B-spline, Kaiser and Gaussian.
+      Pillow's fixed methods retain their own built-in downsampling behavior.
+    * Linear-light processing can be enabled with any resampler. The existing
+      Linear-light Lanczos 3 choice always processes in linear light.
+    * Output sharpening adds optional unsharp correction after scaling.
+      Amount ranges from 0 to 2; Sharpen radius is sigma in output pixels.
+    * Controls that do not apply to the selected method are dimmed.
+
+CPU BUDGET
+
+    Scaling is limited to max(1, physical CPU cores minus 2). On this Ryzen
+    5 5600X, that is 6 physical cores minus 2 = 4. The helper sets numerical
+    library thread limits and process affinity to one logical processor per
+    selected physical core. The same temporary affinity budget covers GIMP's
+    native geometry/mask resizing, and GIMP's previous affinity is restored
+    afterwards, including on error. This is a maximum, not a promise that
+    every algorithm will keep four threads busy. Box and Hamming remain the
+    same resampling algorithms and receive this limit too.
+
+These are conventional resamplers, not neural super-resolution. No method
+is universally better than GIMP's existing NoHalo and LoHalo options.
+All five use premultiplied-alpha processing to avoid colour bleeding from
+fully transparent pixels. Computation uses 32-bit floating-point channels;
+the result is converted back to the image's existing storage precision.
+
+CURRENT LIMITS
+
+* Advanced Scale supports RGB raster layers. Text layers, groups, and layers
+  with live filters are rejected with an explanatory error. Rasterize text,
+  ungroup, or merge live filters when you deliberately want to process them.
+* Whole-image layer geometry, offsets, masks, channels and paths are managed
+  by GIMP's native image scaling with NoHalo. Custom resamplers replace raster
+  layer pixels; masks/channels do not receive the custom resampler.
+* Layer masks use GIMP's native scaling. Selection does not limit resizing.
+* NL preview currently supports a single top-level raster layer, including
+  RGB or grayscale. The preview shows the layer, not a composited image.
+* Source and output scaling are limited to 40 million aggregate layer-pixels.
+  Preview is limited to a 40-megapixel layer. Large images still require
+  substantial memory, and full-resolution preview rendering is synchronous:
+  the dialog may be busy briefly while a render is being calculated.
+* Scaling needs the existing Python 3.13 installation at:
+  %LOCALAPPDATA%\Programs\Python\Python313\python.exe
+  The bundled vendor libraries are Windows x64 CPython 3.13 packages.
+  The NL preview interface and normal native NL modes run with GIMP's bundled
+  Python. Extra filter modes and extended-strength blending use the helper.
+
+INSTALLATION / BACKUP
+
+Already installed in:
+%APPDATA%\GIMP\3.2\plug-ins\gimp-render-tools\
+
+The complete gimp-render-tools folder must be kept together, including
+scale-worker.py and vendor. Restart GIMP after installing/updating.
+Original GIMP commands and NL Filter remain available.
+To uninstall, close GIMP and remove only the gimp-render-tools folder.
+
+No account, API key, external service or model download is used.
+The scale worker communicates through local subprocess pipes.
+
+SOURCE / LICENSE
+
+gimp-render-tools.py: GIMP procedures and preview interface.
+scale-worker.py: float-channel resampling using Pillow and NumPy.
+Custom source is GPL-3.0-or-later; see COPYING.
+Pillow 13.0.0 and NumPy 2.5.4 keep their own licenses under vendor.
+
+Relevant upstream references:
+https://github.com/GNOME/gimp/blob/GIMP_3_2_6/plug-ins/common/nl-filter.c
+https://developer.gimp.org/api/3.0/libgimp/method.Image.scale.html
+https://pillow.readthedocs.io/en/stable/handbook/concepts.html#filters

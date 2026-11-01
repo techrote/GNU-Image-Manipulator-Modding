@@ -1,0 +1,17 @@
+GIMP Render Tools 1.1 validation — Windows x64 / GIMP 3.2.6
+
+- All 13 scaling choices passed worker tests for reduction/enlargement, finite output, and constant-colour preservation.
+- Adjustable Lanczos lobes, Mitchell B/C, Kaiser beta and Gaussian sigma produced different outputs when changed.
+- Alpha-edge checks with optional sharpening passed for all 13 methods.
+- All 13 scaling choices passed GIMP integration for both layer and image commands.
+- All 9 filter choices passed GIMP integration; tests used alpha 1.5 and radius 2.5.
+- Multi-layer offsets/geometry and floating-point image precision checks passed.
+- Selection boundaries stayed unchanged outside the selection for Gaussian, median and extended native NL.
+- Automatic preview regression: first render on opening, combined rapid changes, exactly retained 250% zoom and (220,170) scroll position.
+- Switching to Gaussian at alpha 1.7/radius 2.5 also automatically refreshed and retained zoom/pan.
+- Preview original pixels remained unchanged.
+- Desktop: sliders displayed, alpha 1.5 accepted by keyboard, automatic preview rendered without pressing Render.
+- Desktop: 13-item scaling menu displayed and Kaiser-specific parameter sensitivity worked.
+- CPU topology: 6 physical cores, limit 4, affinity count 4 (one logical processor per selected physical core).
+- Native GIMP affinity was restored after both successful and deliberately failing budget scopes.
+- Budgeted Box, Hamming, Kaiser and Mitchell image scaling passed.
